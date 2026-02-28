@@ -1,0 +1,65 @@
+<button
+  mat-icon-button
+  class="notification-trigger"
+  [matBadge]="unreadCount()"
+  [matBadgeHidden]="unreadCount() === 0"
+  matBadgeColor="warn"
+  matBadgeSize="small"
+  [matMenuTriggerFor]="notifMenu"
+  aria-label="Notifications"
+>
+  <mat-icon>notifications</mat-icon>
+</button>
+
+<mat-menu #notifMenu="matMenu" class="notifications-menu" [overlapTrigger]="false">
+  <div class="menu-header">
+    <div>
+      <div class="title">Notifications</div>
+      <div class="subtitle">Stay on top of activity</div>
+    </div>
+    <button mat-button (click)="markAll()" [disabled]="unreadCount() === 0">
+      Mark all read
+    </button>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <div class="menu-body">
+    @if (loading()) {
+      <div class="state">Loading notifications...</div>
+    } @else if (notifications().length === 0) {
+      <div class="state empty">
+        <mat-icon>inbox</mat-icon>
+        <div>No notifications yet</div>
+      </div>
+    } @else {
+      @for (item of notifications(); track item.id) {
+        <button
+          class="notification-item"
+          mat-menu-item
+          (click)="markAsRead(item)"
+          [class.unread]="!item.isRead"
+        >
+          <div class="dot" [class.active]="!item.isRead"></div>
+          <div class="content">
+            <div class="title-row">
+              <span class="item-title">{{ item.title }}</span>
+              <span class="time">{{ timeAgo(item.createdAt) }}</span>
+            </div>
+            <div class="message">{{ item.message }}</div>
+          </div>
+          @if (!item.isRead) {
+            <mat-icon class="mark-icon">done</mat-icon>
+          }
+        </button>
+      }
+    }
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <button mat-menu-item [routerLink]="['/notifications']">
+    <mat-icon>open_in_new</mat-icon>
+    <span>View all</span>
+  </button>
+</mat-menu>

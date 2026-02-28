@@ -1,0 +1,87 @@
+<div class="form-card composer-card">
+  <div class="form-header">
+    <div>
+      <p class="eyebrow">Notifications</p>
+      <h3>Create targeted alert</h3>
+      <p class="muted">Choose a type, craft the message, and pick the roles to receive it instantly.</p>
+    </div>
+    <button mat-stroked-button class="ghost-btn" type="button" routerLink="/admin/dashboard">
+      <mat-icon>close</mat-icon>
+      Cancel
+    </button>
+  </div>
+
+  <form class="form-grid" [formGroup]="form" (ngSubmit)="submit()">
+    <label class="form-field">
+      <span>Title</span>
+      <input
+        class="form-input"
+        type="text"
+        placeholder="Planned maintenance tonight"
+        formControlName="title"
+        maxlength="200"
+      />
+      <small class="hint">{{ form.controls.title.value.length }}/200</small>
+    </label>
+
+    <label class="form-field">
+      <span>Notification type</span>
+      <select class="form-input" formControlName="type">
+        @for (opt of typeOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }} — {{ opt.helper }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="form-field span-2">
+      <span>Message</span>
+      <textarea
+        class="form-input"
+        rows="5"
+        placeholder="Share context, timelines, and expected impact"
+        formControlName="message"
+        maxlength="1000"
+      ></textarea>
+      <small class="hint">{{ form.controls.message.value.length }}/1000</small>
+    </label>
+
+    <div class="form-field span-2">
+      <span>Target roles</span>
+      <div class="pill-list" [class.disabled]="loadingRoles()">
+        @if (roles().length === 0 && !loadingRoles()) {
+          <div class="muted">No roles available yet.</div>
+        } @else {
+          @for (role of roles(); track role.id) {
+            <label class="pill">
+              <input
+                type="checkbox"
+                [value]="role.id"
+                [checked]="form.controls.roleIds.value.includes(role.id)"
+                (change)="toggleRole(role.id, $any($event.target).checked)"
+                [disabled]="loadingRoles()"
+              />
+              <span>{{ role.name }}</span>
+            </label>
+          }
+        }
+      </div>
+      <small class="hint">{{ selectedCount() }} role(s) selected</small>
+    </div>
+
+    <div class="form-actions">
+      <button mat-button class="ghost-btn" type="button" routerLink="/admin/dashboard">
+        Cancel
+      </button>
+      <button
+        mat-flat-button
+        color="primary"
+        class="primary-btn"
+        type="submit"
+        [disabled]="form.invalid || submitting() || loadingRoles() || selectedCount() === 0"
+      >
+        <mat-spinner *ngIf="submitting()" diameter="18"></mat-spinner>
+        <span *ngIf="!submitting()">Send notification</span>
+      </button>
+    </div>
+  </form>
+</div>

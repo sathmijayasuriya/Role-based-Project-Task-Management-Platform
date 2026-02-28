@@ -1,0 +1,172 @@
+﻿<!-- Header Section -->
+<div class="dialog-header">
+  <div class="header-content">
+    <p class="eyebrow">PROJECT MEMBERS</p>
+    <h2 class="header-title">Manage members</h2>
+    <p class="header-description">Search by email or name to add or remove project members.</p>
+  </div>
+  <button mat-icon-button type="button" aria-label="Close" (click)="close()" class="close-btn">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<!-- Error State -->
+@if (error()) {
+  <div class="state-card state-card--error">
+    <mat-icon class="state-icon">error_outline</mat-icon>
+    <span>{{ error() }}</span>
+  </div>
+}
+
+<!-- Main Content Container -->
+<div class="dialog-content">
+  <!-- Search & Selection Section -->
+  <section class="search-section">
+    <div class="selection-bar">
+      <div class="search-wrapper">
+        <mat-form-field class="search-field" appearance="outline">
+          <mat-icon matPrefix class="search-icon">search</mat-icon>
+          <input
+            matInput
+            placeholder="Search by email or first + last name"
+            [formControl]="searchControl"
+            class="search-input"
+          />
+        </mat-form-field>
+      </div>
+
+      <!-- Selected Chips -->
+      @if (selectedList().length) {
+        <div class="selected-chips-container">
+          <mat-chip-listbox aria-label="Selected users" class="chip-listbox">
+            @for (id of selectedList(); track id) {
+              <mat-chip-option [selected]="true" (removed)="removeChip(id)" class="chip-item">
+                {{ selectedLabel(id) }}
+                <button matChipRemove type="button" aria-label="Remove">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </mat-chip-option>
+            }
+          </mat-chip-listbox>
+        </div>
+      }
+    </div>
+    <p class="search-hint">Pick people by email address or full name. Selected users appear above.</p>
+
+    <!-- User Search Results -->
+    <div class="user-results">
+      @if (userLoading()) {
+        <div class="state-card state-card--loading">
+          <mat-icon class="state-icon spinning">hourglass_empty</mat-icon>
+          <span>Searching users...</span>
+        </div>
+      } @else if (userOptions().length) {
+        <div class="results-list">
+          @for (user of userOptions(); track user.id) {
+            <div class="user-row" [class.selected]="isSelected(user.id)">
+              <div class="user-content">
+                <div class="user-avatar" [style.background-image]="'url(' + (user.profile_picture_path || 'https://i.pravatar.cc/72?u=' + user.id) + ')'"></div>
+                <div class="user-details">
+                  <div class="user-name">{{ userDisplayName(user) }}</div>
+                  <div class="user-email">{{ user.email || user.id }}</div>
+                  <div class="user-tags">
+                    <span class="tag tag--role">{{ user.role || 'member' }}</span>
+                    <span class="tag" [ngClass]="user.onTeam ? 'tag--team' : 'tag--new'">
+                      {{ user.onTeam ? 'On project' : 'New member' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <button
+                class="action-btn"
+                type="button"
+                [class.active]="isSelected(user.id)"
+                (click)="toggleUser(user)"
+                [attr.aria-label]="isSelected(user.id) ? 'Remove ' + userDisplayName(user) : 'Add ' + userDisplayName(user)"
+              >
+                @if (isSelected(user.id)) {
+                  <mat-icon>check_circle</mat-icon>
+                  <span>Selected</span>
+                } @else {
+                  <mat-icon>add_circle_outline</mat-icon>
+                  <span>Add</span>
+                }
+              </button>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="state-card state-card--empty">
+          <mat-icon class="state-icon">person_search</mat-icon>
+          <span>No people match "{{ searchTerm() }}"</span>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Members Preview Section -->
+  <section class="members-section">
+    <div class="section-header">
+      <div>
+        <h3 class="section-title">Project Roster</h3>
+        <span class="section-count">{{ members().length }} total</span>
+      </div>
+    </div>
+
+    @if (isLoading()) {
+      <div class="state-card state-card--loading">
+        <mat-icon class="state-icon spinning">hourglass_empty</mat-icon>
+        <span>Loading members...</span>
+      </div>
+    } @else if (members().length) {
+      <div class="members-list">
+        @for (member of members(); track member.user_id) {
+          <div class="member-row">
+            <div class="member-content">
+              <div class="member-avatar" [style.background-image]="'url(' + ('https://i.pravatar.cc/72?u=' + member.user_id) + ')'"></div>
+              <div class="member-info">
+                <div class="member-name">{{ selectedLabel(member.user_id) }}</div>
+                <div class="member-email">{{ member.user?.email || member.user_id }}</div>
+              </div>
+            </div>
+            <div class="member-meta">
+              <span class="badge badge--role">{{ member.assigned_role || 'member' }}</span>
+              <span class="badge badge--status" [ngClass]="member.user?.status === 'active' ? 'badge--active' : 'badge--inactive'">
+                {{ member.user?.status || 'active' }}
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="state-card state-card--empty">
+        <mat-icon class="state-icon">group_off</mat-icon>
+        <span>No members yet</span>
+      </div>
+    }
+  </section>
+</div>
+
+<!-- Footer Section -->
+<div class="dialog-footer">
+  <div class="footer-message">
+    @if (success()) {
+      <mat-icon class="success-icon">check_circle</mat-icon>
+      <span class="success-text">{{ success() }}</span>
+    }
+  </div>
+  <div class="footer-actions">
+    <button class="btn btn--secondary" type="button" (click)="close()" [disabled]="isSaving()">
+      <span>Cancel</span>
+    </button>
+    <button class="btn btn--primary" type="button" (click)="save()" [disabled]="isSaving()">
+      @if (isSaving()) {
+        <mat-icon class="icon-spin">hourglass_empty</mat-icon>
+        <span>Saving...</span>
+      } @else {
+        <mat-icon>save</mat-icon>
+        <span>Save changes</span>
+      }
+    </button>
+  </div>
+</div>

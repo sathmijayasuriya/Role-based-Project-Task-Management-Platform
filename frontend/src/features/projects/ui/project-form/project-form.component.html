@@ -1,0 +1,71 @@
+<div class="form-card">
+      <div class="form-header">
+        <div>
+          <div class="label">{{ mode === 'create' ? 'Create Project' : 'Edit Project' }}</div>
+          <h3>{{ mode === 'create' ? 'New project' : 'Update project' }}</h3>
+        </div>
+        <button mat-stroked-button class="ghost-btn" type="button" (click)="cancel.emit()">
+          <mat-icon>close</mat-icon>
+          Close
+        </button>
+      </div>
+      <div class="form-grid">
+        <label class="form-field">
+          <span>Project Name</span>
+          <input
+            class="form-input"
+            type="text"
+            placeholder="Enter project name"
+            [(ngModel)]="form.name"
+          />
+        </label>
+        <label class="form-field">
+          <span>Client ID</span>
+          <input
+            class="form-input"
+            type="text"
+            placeholder="Client UUID (optional)"
+            [(ngModel)]="form.client_id"
+          />
+        </label>
+        <label class="form-field">
+          <span>Priority</span>
+          <select class="form-input" [(ngModel)]="form.priority">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </label>
+        <label class="form-field">
+          <span>Start Date</span>
+          <input class="form-input" type="date" [(ngModel)]="form.start_date" />
+        </label>
+        <label class="form-field">
+          <span>End Date</span>
+          <input class="form-input" type="date" [(ngModel)]="form.end_date" />
+        </label>
+        <label class="form-field span-2">
+          <span>Description</span>
+          <textarea
+            class="form-input"
+            rows="3"
+            placeholder="Short summary"
+            [(ngModel)]="form.description"
+          ></textarea>
+        </label>
+      </div>
+      <div class="form-actions">
+        <button mat-button class="ghost-btn" type="button" (click)="cancel.emit()">Cancel</button>
+        <button
+          mat-flat-button
+          color="primary"
+          class="primary-btn"
+          type="button"
+          [disabled]="!form.name.trim() || loading"
+          (click)="onSubmit()"
+        >
+          {{ mode === 'create' ? 'Create Project' : 'Save Changes' }}
+        </button>
+      </div>
+    </div>

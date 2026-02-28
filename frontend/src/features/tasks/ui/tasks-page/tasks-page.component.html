@@ -1,0 +1,397 @@
+<div class="tasks-page">
+  <nav class="breadcrumbs">
+    <mat-icon>grid_view</mat-icon>
+    <a routerLink="/dashboard">Dashboard</a>
+    <span class="crumb-sep">/</span>
+    <span class="crumb-current">Tasks</span>
+  </nav>
+
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Workboard</p>
+      <h1>Tasks</h1>
+      <p class="muted">
+        Track tasks across every project, keep an eye on deadlines, and move work forward.
+      </p>
+      <div class="meta">
+        <span>{{ tasks().length }} tasks</span>
+        <span class="dot">•</span>
+        <span>{{ completionRate() }}% completed</span>
+      </div>
+    </div>
+    <div class="page-actions">
+      <button mat-stroked-button class="ghost-btn" type="button" (click)="refresh()" [disabled]="isLoading()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+      <button
+        mat-stroked-button
+        color="primary"
+        class="add-button"
+        type="button"
+        (click)="openCreateDialog()"
+        [disabled]="!canCreate() || isSaving()"
+      >
+        <mat-icon>add</mat-icon>
+        New task
+      </button>
+    </div>
+  </div>
+
+  <ng-template #createTaskDialog>
+    <div class="card create-card dialog-card">
+      <div class="create-header">
+        <div>
+          <div class="label">New task</div>
+          <h3>Add a task</h3>
+        </div>
+        <button mat-stroked-button class="ghost-btn" type="button" (click)="closeCreateDialog()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      @if (createError()) {
+        <div class="form-error">{{ createError() }}</div>
+      }
+
+      <form class="form-grid" (ngSubmit)="submitCreate()">
+        <label>
+          <span>Title</span>
+          <input
+            type="text"
+            name="title"
+            placeholder="Task title"
+            [(ngModel)]="createForm.title"
+            required
+          />
+        </label>
+
+        <label>
+          <span>Project</span>
+          <select
+            name="project"
+            [ngModel]="createForm.projectId"
+            (ngModelChange)="onProjectChange($event)"
+            required
+          >
+            <option value="" disabled>Select project</option>
+            @for (project of projects(); track project.id) {
+              <option [ngValue]="project.id">{{ project.name }}</option>
+            }
+          </select>
+          @if (projectLoading()) {
+            <div class="muted small">Loading projects...</div>
+          }
+        </label>
+
+        <label>
+          <span>Status</span>
+          <select
+            name="status"
+            [ngModel]="createForm.status"
+            (ngModelChange)="createForm.status = $event"
+          >
+            @for (status of statusOptions; track status) {
+              <option [ngValue]="status">{{ statusLabel(status) }}</option>
+            }
+          </select>
+        </label>
+
+        <label>
+          <span>Priority</span>
+          <select
+            name="priority"
+            [ngModel]="createForm.priority"
+            (ngModelChange)="createForm.priority = $event"
+          >
+            @for (priority of priorityOptions; track priority) {
+              <option [ngValue]="priority">{{ priorityLabel(priority) }}</option>
+            }
+          </select>
+        </label>
+
+        <label>
+          <span>Due date</span>
+          <input
+            type="date"
+            name="dueDate"
+            [ngModel]="createForm.dueDate"
+            (ngModelChange)="createForm.dueDate = $event"
+          />
+        </label>
+
+        <label>
+          <span>Assignee</span>
+          <select
+            name="assignee"
+            [ngModel]="createForm.assigneeId"
+            (ngModelChange)="createForm.assigneeId = $event"
+          >
+            <option value="">Unassigned</option>
+            @if (assigneeOptions().length) {
+              @for (user of assigneeOptions(); track user.id) {
+                <option [ngValue]="user.id">{{ user.name }}</option>
+              }
+            } @else {
+              <option value="" disabled>No members available</option>
+            }
+          </select>
+        </label>
+
+        <label class="full-width">
+          <span>Description</span>
+          <textarea
+            name="description"
+            rows="3"
+            placeholder="What needs to be done?"
+            [ngModel]="createForm.description"
+            (ngModelChange)="createForm.description = $event"
+          ></textarea>
+        </label>
+
+        <div class="form-actions full-width">
+          <button mat-stroked-button class="ghost-btn" type="button" (click)="closeCreateDialog()">Cancel</button>
+          <button mat-stroked-button color="primary" class="add-button" type="submit" [disabled]="isSaving()">
+            <mat-icon>check</mat-icon>
+            Save task
+          </button>
+        </div>
+      </form>
+    </div>
+  </ng-template>
+
+  <div class="stat-grid">
+    @for (stat of statCards(); track stat.key) {
+      <div class="stat-card" [ngClass]="stat.key">
+        <div class="stat-top">
+          <div class="label">{{ stat.label }}</div>
+          <div class="value">{{ stat.count }}</div>
+        </div>
+        <div class="muted small">{{ stat.helper }}</div>
+        <div class="progress">
+          <div class="fill" [style.width.%]="stat.progress || 0" [style.background]="stat.color"></div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="card filter-card">
+    <div class="search">
+      <mat-icon>search</mat-icon>
+      <input
+        type="text"
+        placeholder="Search by title, project, or assignee"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+      />
+    </div>
+    <div class="filter-controls">
+      <div class="control">
+        <span class="label">Status</span>
+        <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)">
+          <option value="all">All statuses</option>
+          @for (status of statusOptions; track status) {
+            <option [ngValue]="status">{{ statusLabel(status) }}</option>
+          }
+        </select>
+      </div>
+      <div class="control">
+        <span class="label">Priority</span>
+        <select [ngModel]="priorityFilter()" (ngModelChange)="priorityFilter.set($event)">
+          <option value="all">All priorities</option>
+          @for (priority of priorityOptions; track priority) {
+            <option [ngValue]="priority">{{ priorityLabel(priority) }}</option>
+          }
+        </select>
+      </div>
+      <div class="control">
+        <span class="label">Due</span>
+        <select [ngModel]="dueFilter()" (ngModelChange)="dueFilter.set($event)">
+          <option value="all">Any due date</option>
+          <option value="upcoming">Due in 7 days</option>
+          <option value="overdue">Overdue</option>
+          <option value="no_due">No due date</option>
+        </select>
+      </div>
+      <div class="control meta">
+        <div class="label">Results</div>
+        <div class="value">{{ filteredTasks().length }} / {{ tasks().length }}</div>
+      </div>
+      <button class="ghost-btn" type="button" (click)="clearFilters()">
+        <mat-icon>filter_alt_off</mat-icon>
+        Clear
+      </button>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <div class="card table-card">
+      <div class="table-header">
+        <div>
+          <h3>Tasks</h3>
+          <p class="muted small">
+            {{ filteredTasks().length }} visible · {{ overdueCount() }} overdue ·
+            {{ upcomingTasks().length }} due soon
+          </p>
+        </div>
+        <div class="header-actions">
+          <span class="pill subtle">View {{ canViewTasks() ? 'allowed' : 'restricted' }}</span>
+          @if (canCreate()) {
+            <button class="add-button" mat-stroked-button color="warn">        
+              <mat-icon>add</mat-icon>
+              New Task
+            </button>
+          }
+        </div>
+      </div>
+
+      @if (error()) {
+        <div class="state-card error">{{ error() }}</div>
+      } @else if (isLoading()) {
+        <div class="state-card">Loading tasks...</div>
+      } @else if (!tasks().length) {
+        <div class="empty-state">
+          <mat-icon>task</mat-icon>
+          <h3>No tasks yet</h3>
+          <p class="muted">Create a task to kick off your workflow.</p>
+          <button
+            mat-stroked-button
+            color="primary"
+            class="add-button"
+            type="button"
+            (click)="openCreateDialog()"
+            [disabled]="!canCreate()"
+          >
+            <mat-icon>add</mat-icon>
+            Add task
+          </button>
+        </div>
+      } @else if (!filteredTasks().length) {
+        <div class="empty-state muted">
+          <mat-icon>filter_alt</mat-icon>
+          <p>No tasks match these filters.</p>
+          <button class="ghost-btn" type="button" (click)="clearFilters()">Reset filters</button>
+        </div>
+      } @else {
+        <div class="table-wrapper">
+          <table class="tasks-table">
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>Project</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Progress</th>
+                <th>Due</th>
+                <th>Assignee</th>
+                <th>actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (task of filteredTasks(); track task.id) {
+                <tr>
+                  <td>
+                    <div class="task-title">{{ task.title }}</div>
+                    <div class="muted small">
+                      {{ task.description || 'No description yet' }}
+                      @if (task.subtasks?.length) {
+                        · {{ task.subtasks?.length }} subtask(s)
+                      }
+                    </div>
+                  </td>
+                  <td class="muted small">{{ task.projectName }}</td>
+                  <td>
+                    @if (canEditTask(task)) {
+                      <select
+                        class="chip-select"
+                        [disabled]="updatingIds().has(task.id)"
+                        [ngModel]="task.status"
+                        (ngModelChange)="updateTaskStatus(task, $event)"
+                      >
+                        @for (status of statusOptions; track status) {
+                          <option [ngValue]="status">{{ statusLabel(status) }}</option>
+                        }
+                      </select>
+                    } @else {
+                      <span class="pill status" [ngClass]="statusClass(task.status)">
+                        {{ statusLabel(task.status) }}
+                      </span>
+                    }
+                  </td>
+                  <td>
+                    <span class="pill priority" [ngClass]="priorityClass(task.priority)">
+                      {{ priorityLabel(task.priority) }}
+                    </span>
+                  </td>
+                  <td class="progress-cell">
+                    <div class="progress">
+                      <div class="fill" [style.width.%]="task.progress"></div>
+                    </div>
+                    <div class="muted tiny">{{ progressLabel(task) }} · {{ task.progress }}%</div>
+                  </td>
+                  <td>
+                    <div class="pill subtle due" [ngClass]="dueState(task)">
+                      <mat-icon>calendar_today</mat-icon>
+                      {{ formatDate(task.dueDate) || 'No due date' }}
+                    </div>
+                  </td>
+                  <td>{{ task.assigneeName }}</td>
+                  <td class="row-actions">
+                    <button
+                      class="icon-btn ghost"
+                      type="button"
+                      [disabled]="!canEditTask(task) || updatingIds().has(task.id)"
+                      (click)="updateTaskStatus(task, 'completed')"
+                      aria-label="Mark complete"
+                    >
+                      <mat-icon>task_alt</mat-icon>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <div class="side-panel">
+      <div class="card side-card">
+        <div class="side-header">
+          <div>
+            <div class="label">Due soon</div>
+            <h4>{{ upcomingTasks().length }} task(s)</h4>
+          </div>
+          <span class="pill subtle">Next 7 days</span>
+        </div>
+        @if (upcomingTasks().length) {
+          <div class="mini-list">
+            @for (task of upcomingTasks(); track task.id) {
+              <div class="mini-row">
+                <div>
+                  <div class="value">{{ task.title }}</div>
+                  <div class="muted tiny">{{ task.projectName }}</div>
+                </div>
+                <div class="muted tiny">{{ formatDate(task.dueDate) }}</div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="muted small">No upcoming tasks in the next week.</div>
+        }
+      </div>
+
+      <div class="card side-card">
+        <div class="label">Filters</div>
+        <div class="chip-stack">
+          <span class="chip">Status: {{ statusFilterLabel() }}</span>
+          <span class="chip">Priority: {{ priorityFilterLabel() }}</span>
+          <span class="chip">Due: {{ dueFilterLabel() }}</span>
+        </div>
+        <p class="muted tiny">
+          Use the controls above to quickly narrow down tasks and keep focus where it matters.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

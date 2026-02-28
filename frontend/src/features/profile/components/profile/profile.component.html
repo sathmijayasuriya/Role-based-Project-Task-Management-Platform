@@ -1,0 +1,57 @@
+<div class="profile-page">
+  <div class="page-header">
+    <div class="heading">
+      <p class="eyebrow">Account</p>
+      <h1>My Profile</h1>
+      <p class="subtitle">Manage your profile picture, details, and password in one place.</p>
+    </div>
+  </div>
+
+  <div class="stacked-cards">
+    <section class="card hero-card">
+      <div class="card-header">
+        <div>
+          <h2>Admin profile picture</h2>
+          <p>Keep your avatar current so teammates recognize you quickly.</p>
+        </div>
+      </div>
+      <div class="hero-content">
+        <div class="summary">
+          <div class="avatar" [class.initials]="!profileUser()?.profilePictureUrl">
+            @if (profileUser()?.profilePictureUrl) {
+            <img [src]="profileUser()?.profilePictureUrl" [alt]="getFullName()" />
+            } @else {
+            <span>{{ getInitials() }}</span>
+            }
+          </div>
+          <div class="identity">
+            <div class="name">{{ getFullName() }}</div>
+            <div class="role">{{ roleLabel() }}</div>
+            <div class="contact">{{ profileUser()?.email || '—' }}</div>
+            <!-- <div class="location">
+              <mat-icon>location_on</mat-icon>
+              <span>{{ locationLabel() }}</span>
+            </div> -->
+          </div>
+        </div>
+        <div class="picture-uploader">
+          <app-profile-picture></app-profile-picture>
+        </div>
+      </div>
+    </section>
+
+    <section class="card info-card">
+      <div class="card-header">
+        <div>
+          <h2>Personal information</h2>
+          <p>Basic details that identify you across the workspace.</p>
+        </div>
+      </div>
+      <app-edit-profile></app-edit-profile>
+    </section>
+
+    <section class="card password-card">
+      <app-change-password></app-change-password>
+    </section>
+  </div>
+</div>

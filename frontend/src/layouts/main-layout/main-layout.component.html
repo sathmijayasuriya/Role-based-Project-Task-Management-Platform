@@ -1,0 +1,174 @@
+<div class="layout-container">
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.collapsed]="sidebarCollapsed()">
+    <!-- User Profile Section -->
+    <div class="sidebar-header">
+      <div class="user-profile">
+        <div class="avatar">
+          @if (authService.currentUser()?.profilePictureUrl) {
+          <img [src]="authService.currentUser()?.profilePictureUrl" alt="User" />
+          } @else {
+          {{ getInitials() }}
+          }
+        </div>
+        @if (!sidebarCollapsed()) {
+        <div class="user-info">
+          <div class="user-name">{{ authService.userFullName() }}</div>
+          <div class="user-email">{{ authService.currentUser()?.email }}</div>
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- Main Navigation -->
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-label" *ngIf="!sidebarCollapsed()">Main Menu</div>
+        @for (item of menuItems; track item.route) { @if (canShow(item)) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          class="nav-item"
+          [matTooltip]="sidebarCollapsed() ? item.label : ''"
+          matTooltipPosition="right"
+        >
+          <mat-icon>{{ item.icon }}</mat-icon>
+          @if (!sidebarCollapsed()) {
+          <span>{{ item.label }}</span>
+          } @if (!sidebarCollapsed() && item.route === '/notifications' && notificationsUnread() > 0) {
+          <span class="badge-count">{{ notificationsUnread() }}</span>
+          } @else if (item.badge && !sidebarCollapsed()) {
+          <span class="badge-count">{{ item.badge }}</span>
+          }
+        </a>
+        } }
+      </div>
+
+      <!-- Favorites Section -->
+      <!-- @if (!sidebarCollapsed() && favoriteProjects.length > 0) {
+      <div class="nav-section">
+        <div class="nav-label">Favorites</div>
+        @for (project of favoriteProjects; track project.id) {
+        <a [routerLink]="['/projects', project.id]" class="nav-item nav-item-small">
+          <div class="project-icon" [style.background-color]="project.color">
+            {{ project.name.charAt(0) }}
+          </div>
+        <span>{{ project.name }}</span>
+        </a>
+        }
+      </div>
+      } -->
+
+      <!-- Settings Section -->
+      <div class="nav-section">
+        <div class="nav-label" *ngIf="!sidebarCollapsed()">Settings</div>
+        @for (item of settingsItems; track item.route) { @if (canShow(item)) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          class="nav-item nav-subitem"
+          [matTooltip]="sidebarCollapsed() ? item.label : ''"
+          matTooltipPosition="right"
+        >
+          <mat-icon>{{ item.icon }}</mat-icon>
+          @if (!sidebarCollapsed()) {
+          <span>{{ item.label }}</span>
+          }
+        </a>
+        } }
+      </div>
+
+      <!-- Logout -->
+      <div class="nav-section">
+        <div class="nav-label" *ngIf="!sidebarCollapsed()">Logout</div>
+        <a
+          href="#"
+          class="nav-item nav-subitem"
+          role="button"
+          (click)="logout(); $event.preventDefault()"
+          [matTooltip]="sidebarCollapsed() ? 'Logout' : ''"
+          matTooltipPosition="right"
+        >
+          <mat-icon>logout</mat-icon>
+          @if (!sidebarCollapsed()) {
+          <span>Logout</span>
+          }
+        </a>
+      </div>
+    </nav>
+
+    <!-- Sidebar Toggle -->
+    <button mat-icon-button class="sidebar-toggle" (click)="toggleSidebar()">
+      <mat-icon>{{ sidebarCollapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+    </button>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="header-left">
+        <button mat-icon-button class="menu-toggle" (click)="toggleSidebar()">
+          <mat-icon>menu</mat-icon>
+        </button>
+        <h1 class="page-title">{{ currentPage() }}</h1>
+      </div>
+
+      <div class="header-right">
+        <!-- Search -->
+        <div class="search-box">
+          <mat-icon>search</mat-icon>
+          <input type="text" placeholder="Search..." />
+        </div>
+
+        <!-- Notifications -->
+        <app-notifications-menu></app-notifications-menu>
+
+        <!-- Settings -->
+        <button mat-icon-button>
+          <mat-icon>settings</mat-icon>
+        </button>
+
+        <!-- User Menu -->
+        <button mat-button [matMenuTriggerFor]="userMenu" class="user-menu-btn">
+          <div class="avatar avatar-sm">
+            @if (authService.currentUser()?.profilePictureUrl) {
+            <img [src]="authService.currentUser()?.profilePictureUrl" alt="User" />
+            } @else {
+            {{ getInitials() }}
+            }
+          </div>
+          <mat-icon>arrow_drop_down</mat-icon>
+        </button>
+        <mat-menu #userMenu="matMenu" class="user-dropdown">
+          <div class="user-menu-header">
+            <div class="avatar">{{ getInitials() }}</div>
+            <div>
+              <div class="menu-user-name">{{ authService.userFullName() }}</div>
+              <div class="menu-user-email">{{ authService.currentUser()?.email }}</div>
+            </div>
+          </div>
+          <mat-divider></mat-divider>
+          <button mat-menu-item routerLink="/profile">
+            <mat-icon>person</mat-icon>
+            <span>My Profile</span>
+          </button>
+          <button mat-menu-item routerLink="/settings">
+            <mat-icon>settings</mat-icon>
+            <span>Settings</span>
+          </button>
+          <mat-divider></mat-divider>
+          <button mat-menu-item (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            <span>Logout</span>
+          </button>
+        </mat-menu>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <div class="page-content">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,84 @@
+<div class="form-wrapper">
+  <div class="form-header">
+    <div>
+      <p class="eyebrow">
+        {{ mode === 'create' ? 'Invite a teammate' : 'Edit member' }}
+      </p>
+      <h3 class="form-title">
+        {{ mode === 'create' ? 'Create User' : 'Update User' }}
+      </h3>
+      <p class="muted">Add team members, assign roles, and set their account status.</p>
+    </div>
+
+    <button type="button" mat-stroked-button (click)="cancel.emit()" [disabled]="loading">
+      <mat-icon>close</mat-icon>
+      close
+    </button>
+  </div>
+
+  <form class="form-body" (ngSubmit)="onSubmit()">
+    <div class="input-grid">
+      <div class="input-group">
+        <label for="first_name">First Name</label>
+        <input id="first_name" name="first_name" type="text" [(ngModel)]="form.first_name" required
+          placeholder="Jane" />
+      </div>
+
+      <div class="input-group">
+        <label for="last_name">Last Name</label>
+        <input id="last_name" name="last_name" type="text" [(ngModel)]="form.last_name" required placeholder="Cooper" />
+      </div>
+    </div>
+
+    <div class="input-grid">
+      <div class="input-group">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" [(ngModel)]="form.email" required placeholder="name@example.com" />
+      </div>
+
+      <div class="input-group">
+        <label for="phone">Phone</label>
+        <input id="phone" name="phone" type="tel" [(ngModel)]="form.phone" placeholder="+1 234 567 890" />
+      </div>
+    </div>
+
+    <div class="input-grid">
+      <div class="input-group">
+        <label for="status">Status</label>
+        <select id="status" name="status" [(ngModel)]="form.status">
+          @for (status of statusOptions; track status.value) {
+          <option [ngValue]="status.value">{{ status.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>Roles</label>
+        <div class="role-list">
+          @if (availableRoles.length === 0) {
+          <div class="muted empty-role">No roles available yet.</div>
+          } @else {
+          @for (role of availableRoles; track role.id) {
+          <label class="role-pill">
+            <input type="checkbox" [checked]="isRoleSelected(role.name)"
+              (change)="toggleRole(role.name, $any($event.target).checked)" />
+            <span>{{ role.name }}</span>
+          </label>
+          }
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" mat-button class="ghost-btn" (click)="cancel.emit()" [disabled]="loading">
+        Cancel
+      </button>
+
+      <button type="submit" mat-flat-button color="primary" class="primary-btn" [disabled]="loading">
+        <mat-icon>{{ mode === 'create' ? 'person_add' : 'save' }}</mat-icon>
+        {{ mode === 'create' ? 'Create User' : 'Save Changes' }}
+      </button>
+    </div>
+  </form>
+</div>

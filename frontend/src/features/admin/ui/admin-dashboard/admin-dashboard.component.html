@@ -1,0 +1,167 @@
+<div class="admin-dashboard">
+  <div class="admin-header">
+    <div>
+      <p class="eyebrow">Control center</p>
+      <h1>Admin Dashboard</h1>
+      <p class="header-subtitle">Workspace health, quick actions, and people updates.</p>
+    </div>
+    <div class="header-actions">
+      <button mat-stroked-button color="primary" (click)="refresh()" [disabled]="isLoading()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+      @if (canManageUsers()) {
+      <button mat-raised-button color="primary" routerLink="/team/create">
+        <mat-icon>person_add</mat-icon>
+        Add User
+      </button>
+      }
+    </div>
+  </div>
+
+  @if (error()) {
+  <div class="inline-banner error">
+    <div class="banner-copy">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error() }}</span>
+    </div>
+    <button mat-stroked-button color="primary" (click)="refresh()">Retry</button>
+  </div>
+  }
+
+  @if (isLoading() && adminStats().length === 0) {
+  <div class="loading-state">
+    <mat-progress-spinner diameter="28" mode="indeterminate"></mat-progress-spinner>
+    <span>Loading admin overview...</span>
+  </div>
+  }
+
+  <!-- Admin Stats -->
+  <div class="stats-grid">
+    @for (stat of adminStats(); track stat.key) {
+    <div class="stat-card">
+      <div class="stat-icon" [style.background-color]="stat.color">
+        <mat-icon>{{ stat.icon }}</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stat.value }}</div>
+        <div class="stat-title">{{ stat.title }}</div>
+        @if (stat.helper) {
+        <div class="stat-helper">{{ stat.helper }}</div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions-section">
+    <h2>Quick Actions</h2>
+    <div class="actions-grid">
+      <button mat-button class="action-btn" routerLink="/admin/users">
+        <mat-icon>people</mat-icon>
+        <span>Manage Users</span>
+      </button>
+      <button mat-button class="action-btn" routerLink="/admin/roles">
+        <mat-icon>admin_panel_settings</mat-icon>
+        <span>Roles &amp; Permissions</span>
+      </button>
+      <button mat-button class="action-btn" routerLink="/projects">
+        <mat-icon>folder</mat-icon>
+        <span>All Projects</span>
+      </button>
+      <button mat-button class="action-btn" routerLink="/admin/notifications/create">
+        <mat-icon>campaign</mat-icon>
+        <span>Send Notification</span>
+      </button>
+      <button mat-button class="action-btn" routerLink="/tasks">
+        <mat-icon>task_alt</mat-icon>
+        <span>Workspace Tasks</span>
+      </button>
+      <!-- <button mat-button class="action-btn" routerLink="/team">
+        <mat-icon>group</mat-icon>
+        <span>Team Directory</span>
+      </button> -->
+      <button mat-button class="action-btn" routerLink="/profile">
+        <mat-icon>settings</mat-icon>
+        <span>Profile &amp; Security</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Recent Users & System Activity -->
+  <div class="content-grid">
+    <div class="table-card">
+      <div class="card-header">
+        <h3>Recent Users</h3>
+        <button mat-button routerLink="/admin/users">View All</button>
+      </div>
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Joined</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (!recentUsers().length && !isLoading()) {
+          <tr>
+            <td colspan="5" class="empty-cell">No users yet.</td>
+          </tr>
+          } @else {
+          @for (user of recentUsers(); track user.id) {
+          <tr>
+            <td>
+              <div class="user-cell">
+                <div class="avatar">{{ user.name.charAt(0) }}</div>
+                <span>{{ user.name }}</span>
+              </div>
+            </td>
+            <td>{{ user.email }}</td>
+            <td>
+              <span class="role-badge" [ngClass]="user.roleKey">{{ user.roleLabel }}</span>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="user.statusKey">{{ user.statusLabel }}</span>
+            </td>
+            <td class="date-cell">{{ user.joined }}</td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="activity-card">
+      <div class="card-header">
+        <h3>System Activity</h3>
+        <button mat-button (click)="refresh()" [disabled]="isLoading()">Refresh</button>
+      </div>
+      <div class="activity-list">
+        @if (!activityFeed().length && isLoading()) {
+        <div class="loading-state compact">
+          <mat-progress-spinner diameter="24" mode="indeterminate"></mat-progress-spinner>
+          <span>Loading...</span>
+        </div>
+        } @else if (!activityFeed().length) {
+        <div class="empty-state">No recent activity yet.</div>
+        } @else {
+        @for (activity of activityFeed(); track activity.id) {
+        <div class="activity-item">
+          <div class="activity-icon" [style.background-color]="activity.color">
+            <mat-icon>{{ activity.icon }}</mat-icon>
+          </div>
+          <div class="activity-content">
+            <div class="activity-text">{{ activity.text }}</div>
+            <div class="activity-time">{{ activity.time }}</div>
+          </div>
+        </div>
+        }
+        }
+      </div>
+    </div>
+  </div>
+</div>

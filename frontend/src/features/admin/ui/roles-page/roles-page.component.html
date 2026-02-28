@@ -1,0 +1,142 @@
+<div class="roles-page">
+  <div class="header">
+    <div>
+      <p class="eyebrow">Access control</p>
+      <h1>Roles & Permissions</h1>
+      <p class="subtitle">
+        Manage role metadata and permission assignments. Switch tabs to see roles or permissions.
+      </p>
+    </div>
+    <button mat-raised-button color="primary" (click)="openRoleDialog()">
+      <mat-icon>add</mat-icon>
+      Create role
+    </button>
+  </div>
+
+  <div class="nav-tabs" role="tablist">
+    <button
+      type="button"
+      class="nav-tab"
+      [class.active]="activeTab() === 'roles'"
+      (click)="activeTab.set('roles')"
+      role="tab"
+      aria-selected="{{ activeTab() === 'roles' }}"
+    >
+      Roles
+      <span class="pill small">{{ roleCount() }}</span>
+    </button>
+    <button
+      type="button"
+      class="nav-tab"
+      [class.active]="activeTab() === 'permissions'"
+      (click)="activeTab.set('permissions')"
+      role="tab"
+      aria-selected="{{ activeTab() === 'permissions' }}"
+    >
+      Permissions
+      <span class="pill small">{{ permissionCount() }}</span>
+    </button>
+  </div>
+
+  @if (activeTab() === 'roles') {
+    @if (isLoading()) {
+      <div class="loading">
+        <mat-spinner diameter="38"></mat-spinner>
+        <p>Loading roles…</p>
+      </div>
+    } @else if (roles().length === 0) {
+      <mat-card class="empty-card">
+        <div class="empty-content">
+          <mat-icon>group_work</mat-icon>
+          <div>
+            <h3>No roles yet</h3>
+            <p class="subtitle">Start by creating a role and assigning permissions.</p>
+          </div>
+          <button mat-stroked-button color="primary" (click)="openRoleDialog()">
+            <mat-icon>add</mat-icon>
+            Create role
+          </button>
+        </div>
+      </mat-card>
+    } @else {
+      <div class="roles-grid">
+        @for (role of roles(); track role.id) {
+          <mat-card class="role-card">
+            <div class="card-header">
+              <div class="card-title">
+                <h3>{{ role.name }}</h3>
+                <p class="subtitle" *ngIf="role.description">{{ role.description }}</p>
+                <p class="subtitle" *ngIf="!role.description">No description provided.</p>
+              </div>
+              <button mat-icon-button (click)="openRoleDialog(role.id)" matTooltip="Edit role">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </div>
+            <div class="meta">
+              <span class="pill">{{ role.permissions?.length || 0 }} permissions</span>
+            </div>
+          </mat-card>
+        }
+      </div>
+    }
+  } @else {
+    <div class="filter-row">
+      <div class="search-box">
+        <!-- <mat-icon>search</mat-icon> -->
+        <input [formControl]="searchControl" placeholder="Search permissions" />
+      </div>
+      <span class="muted">{{ filteredPermissions().length }} results</span>
+    </div>
+
+    @if (filteredPermissions().length === 0) {
+      <mat-card class="empty-card">
+        <div class="empty-content">
+          <mat-icon>lock</mat-icon>
+          <div>
+            <h3>No permissions found</h3>
+            <p class="subtitle">Permissions will appear here once available.</p>
+          </div>
+        </div>
+      </mat-card>
+    } @else {
+      <mat-accordion multi class="permission-accordion">
+        @for (group of groupedPermissions(); track group.category) {
+          <mat-expansion-panel class="group-panel">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <div class="panel-title">
+                  <p class="eyebrow">{{ group.category }}</p>
+                  <span class="pill small light">{{ group.items.length }} permissions</span>
+                </div>
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <div class="permissions-grid">
+              @for (perm of group.items; track perm.id) {
+                <mat-card class="permission-card">
+                  <div class="card-header">
+                    <div>
+                      <p class="perm-name">{{ formatPermissionName(perm.name) }}</p>
+                      <p class="perm-desc" *ngIf="perm.description">{{ perm.description }}</p>
+                      <p class="perm-desc muted" *ngIf="!perm.description">No description provided.</p>
+                    </div>
+                    <span class="pill light">{{ perm.roles?.length || 0 }} roles</span>
+                  </div>
+                  @if ((perm.roles?.length || 0) > 0) {
+                    <div class="role-chips">
+                      @for (role of perm.roles || []; track role.id) {
+                        <mat-chip>{{ role.name }}</mat-chip>
+                      }
+                    </div>
+                  } @else {
+                    <p class="muted empty-roles">No roles assigned</p>
+                  }
+                </mat-card>
+              }
+            </div>
+          </mat-expansion-panel>
+        }
+      </mat-accordion>
+    }
+  }
+</div>

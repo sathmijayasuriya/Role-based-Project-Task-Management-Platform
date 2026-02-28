@@ -1,0 +1,56 @@
+<div class="edit-profile-section">
+  <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
+    <label class="form-field">
+      <span>First name</span>
+      <div class="input-shell">
+        <mat-icon>badge</mat-icon>
+        <input
+          class="form-input"
+          type="text"
+          placeholder="Enter first name"
+          formControlName="firstName"
+        />
+      </div>
+      @if (profileForm.get('firstName')?.hasError('required') && profileForm.get('firstName')?.touched) {
+      <p class="field-error">First name is required</p>
+      }
+    </label>
+
+    <label class="form-field">
+      <span>Last name</span>
+      <div class="input-shell">
+        <mat-icon>badge</mat-icon>
+        <input class="form-input" type="text" placeholder="Enter last name" formControlName="lastName" />
+      </div>
+      @if (profileForm.get('lastName')?.hasError('required') && profileForm.get('lastName')?.touched) {
+      <p class="field-error">Last name is required</p>
+      }
+    </label>
+
+    <label class="form-field">
+      <span>Phone number</span>
+      <div class="input-shell">
+        <mat-icon>phone</mat-icon>
+        <input
+          class="form-input"
+          type="tel"
+          placeholder="+1 (987) 654 321"
+          formControlName="phone"
+        />
+      </div>
+    </label>
+
+    <div class="form-actions">
+      <button
+        mat-flat-button
+        color="primary"
+        class="primary-btn"
+        type="submit"
+        [disabled]="profileForm.invalid || isSaving()"
+      >
+        <mat-icon>{{ isSaving() ? 'hourglass_empty' : 'save' }}</mat-icon>
+        <span>{{ isSaving() ? 'Saving...' : 'Save changes' }}</span>
+      </button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,108 @@
+.notification-trigger {
+  position: relative;
+}
+
+:host ::ng-deep .notifications-menu {
+  min-width: 360px;
+  padding: 0;
+}
+
+.menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+
+.menu-header .title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.menu-header .subtitle {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.menu-body {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.state {
+  text-align: center;
+  padding: 24px 12px;
+  color: var(--text-tertiary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.state mat-icon {
+  color: var(--text-tertiary);
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  white-space: normal;
+  padding-block: 12px;
+}
+
+.notification-item.unread {
+  background: linear-gradient(
+    90deg,
+    rgba(99, 102, 241, 0.08),
+    rgba(99, 102, 241, 0.02)
+  );
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 6px;
+  background: var(--text-tertiary);
+  opacity: 0.5;
+}
+
+.dot.active {
+  background: var(--primary-color);
+  opacity: 1;
+}
+
+.content {
+  flex: 1;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.item-title {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.time {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.message {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.mark-icon {
+  color: var(--primary-color);
+}

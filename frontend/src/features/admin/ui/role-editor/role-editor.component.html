@@ -1,0 +1,94 @@
+<form class="role-editor-v2" [formGroup]="roleForm" (ngSubmit)="onSubmit()">
+  <header class="dialog-header">
+    <div class="title-area">
+      <h2>{{ mode() === 'edit' ? 'Edit Role' : 'New Role' }}</h2>
+      <div class="selection-badge">
+        <mat-icon>check_circle</mat-icon>
+        {{ selectedCount }} Permissions Selected
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button mat-button type="button" (click)="close()">Cancel</button>
+      <button matButton="outlined" color="primary" type="submit" [disabled]="isSaving() || isLoading()">
+        {{ mode() === 'edit' ? 'Update Role' : 'Create Role' }}
+      </button>
+    </div>
+  </header>
+
+  <div mat-dialog-content class="modern-content">
+    <section class="metadata-section">
+      <mat-form-field appearance="outline">
+        <mat-label>Role Name</mat-label>
+        <input matInput formControlName="name" placeholder="e.g. Lead Developer" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Description</mat-label>
+        <input matInput formControlName="description" placeholder="Briefly describe what this role can do" />
+      </mat-form-field>
+    </section>
+
+    <section class="permissions-section">
+      <div class="section-toolbar">
+        <h2>System Permissions</h2>
+        <div class="search-box">
+          <mat-icon>search</mat-icon>
+          <input [formControl]="searchControl" placeholder="Filter by name or description..." />
+        </div>
+      </div>
+
+      @if (isLoading()) {
+        <div class="permissions-list">
+          <div class="skeleton skeleton-row"></div>
+          <div class="skeleton skeleton-row"></div>
+          <div class="skeleton skeleton-row"></div>
+        </div>
+      } @else {
+        <div class="permission-groups" formArrayName="permissions">
+          <mat-accordion multi class="permission-accordion">
+            @for (group of filteredPermissionGroups; track group.groupIndex) {
+              <mat-expansion-panel
+                [formGroupName]="group.groupIndex"
+                [expanded]="(searchControl.value?.length || 0) > 0"
+                class="group-panel"
+              >
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-checkbox
+                      color="primary"
+                      [checked]="isCategoryChecked(group.groupIndex)"
+                      [indeterminate]="isCategoryIndeterminate(group.groupIndex)"
+                      (change)="toggleCategory(group.groupIndex, $event.checked)"
+                      (click)="$event.stopPropagation()"
+                    ></mat-checkbox>
+                    <span class="category-name">{{ group.group.get('category')?.value }}</span>
+                  </mat-panel-title>
+                  <mat-panel-description>
+                    <div class="panel-meta">
+                      <span class="pill">{{ getSelectedCountInCategory(group.groupIndex) }} / {{ group.permissions.length }} active</span>
+                      <span class="pill light">Toggle all</span>
+                    </div>
+                  </mat-panel-description>
+                </mat-expansion-panel-header>
+
+                <div class="permissions-list" formArrayName="permissions">
+                  @for (perm of group.permissions; track perm.control.get('id')?.value) {
+                    <div class="permission-row" [formGroupName]="perm.index">
+                      <mat-checkbox formControlName="selected" color="primary">
+                        <div class="perm-label">
+                          <span class="perm-name">{{ formatPermissionName(perm.control.get('name')?.value) }}</span>
+                          <span class="perm-desc">{{ perm.control.get('description')?.value }}</span>
+                        </div>
+                      </mat-checkbox>
+                    </div>
+                  }
+                </div>
+              </mat-expansion-panel>
+            }
+          </mat-accordion>
+        </div>
+      }
+    </section>
+  </div>
+</form>

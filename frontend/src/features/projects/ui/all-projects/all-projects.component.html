@@ -1,0 +1,297 @@
+<div class="projects-page">
+      <nav class="breadcrumbs">
+        <mat-icon>grid_view</mat-icon>
+        <a routerLink="/dashboard">Dashboard</a>
+        <span class="crumb-sep">/</span>
+        <a routerLink="/projects">Projects</a>
+        <span class="crumb-sep">/</span>
+        <span class="crumb-current">All Projects</span>
+      </nav>
+      <div class="page-header">
+        <div>
+          <h1>All Projects</h1>
+          <p class="muted">
+            Track every client project, filter by status, and drill into details with a single click.
+          </p>
+        </div>
+        <div class="header-actions">
+          <button mat-stroked-button class="ghost-btn">
+            Progress type: Project
+            <mat-icon>expand_more</mat-icon>
+          </button>
+          <button mat-stroked-button class="ghost-btn">
+            <mat-icon>sort</mat-icon>
+            Sort
+          </button>
+          <button mat-stroked-button class="ghost-btn">
+            <mat-icon>tune</mat-icon>
+            More filters
+          </button>
+          <button mat-stroked-button class="ghost-btn">
+            <mat-icon>feedback</mat-icon>
+            Send Feedback
+          </button>
+        </div>
+      </div>
+
+      <div class="filter-row card">
+        <div class="filter-block">
+          <div class="filter-label">Status</div>
+          <div class="filter-pills">
+            <button
+              class="pill-btn"
+              [class.active]="statusFilter() === 'all'"
+              (click)="statusFilter.set('all')"
+            >
+              All
+            </button>
+            <button
+              class="pill-btn"
+              [class.active]="statusFilter() === 'in_progress'"
+              (click)="statusFilter.set('in_progress')"
+            >
+              In Progress
+            </button>
+            <button
+              class="pill-btn"
+              [class.active]="statusFilter() === 'completed'"
+              (click)="statusFilter.set('completed')"
+            >
+              Completed
+            </button>
+            <button
+              class="pill-btn"
+              [class.active]="statusFilter() === 'on_hold'"
+              (click)="statusFilter.set('on_hold')"
+            >
+              On Hold
+            </button>
+          </div>
+        </div>
+        <div class="filter-block">
+          <div class="filter-label">Priority</div>
+          <div class="filter-pills">
+            <button
+              class="pill-btn"
+              [class.active]="priorityFilter() === 'all'"
+              (click)="priorityFilter.set('all')"
+            >
+              All
+            </button>
+            <button
+              class="pill-btn"
+              [class.active]="priorityFilter() === 'low'"
+              (click)="priorityFilter.set('low')"
+            >
+              Low
+            </button>
+            <button
+              class="pill-btn"
+              [class.active]="priorityFilter() === 'medium'"
+              (click)="priorityFilter.set('medium')"
+            >
+              Medium
+            </button>
+            <button
+              class="pill-btn"
+              [class.active]="priorityFilter() === 'high'"
+              (click)="priorityFilter.set('high')"
+            >
+              High
+            </button>
+            <button
+              class="pill-btn"
+              [class.active]="priorityFilter() === 'critical'"
+              (click)="priorityFilter.set('critical')"
+            >
+              Critical
+            </button>
+          </div>
+        </div>
+        <div class="filter-block search-block">
+          <div class="filter-label">Search</div>
+          <div class="search-wrap">
+            <mat-icon>search</mat-icon>
+            <input
+              class="filter-input"
+              type="text"
+              placeholder="Project or client"
+              [ngModel]="searchTerm()"
+              (ngModelChange)="searchTerm.set($event)"
+            />
+            <button mat-button class="ghost-btn" (click)="clearFilters()">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      @if (showForm()) {
+      <div class="modal-backdrop" (click)="closeForm()">
+        <div class="modal-shell" (click)="$event.stopPropagation()">
+          <app-project-form
+            [mode]="formMode()"
+            [project]="editingProjectForm()"
+            (save)="handleFormSubmit($event)"
+            (cancel)="closeForm()"
+          />
+        </div>
+      </div>
+      }
+
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div class="toolbar-left">
+            <div class="pill">All Projects</div>
+            <div class="divider"></div>
+            <span class="muted">{{ filteredProjects().length }} total</span>
+            <span class="selected" *ngIf="selectedIds().size > 0">- {{ selectedIds().size }} selected</span>
+            @if (viewingAssignedOnly()) {
+            <span class="scope-hint">Showing only projects assigned to you</span>
+            }
+          </div>
+          <div class="toolbar-actions">
+            <button mat-stroked-button class="ghost-btn">Export</button>
+            @if (canCreate()) {
+            <button class="add-button" mat-stroked-button color="warn" (click)="requestCreateProject()">
+              <mat-icon>add</mat-icon>
+              New Project
+            </button>
+            }
+          </div>
+          </div>
+
+        <div class="table-wrapper">
+          @if (error()) {
+          <div class="state-card error">{{ error() }}</div>
+          } @else if (isLoading()) {
+          <div class="state-card">Loading projects...</div>
+          } @else if (!filteredProjects().length) {
+          <div class="empty-state">
+            <mat-icon>{{ canViewProjects() ? 'checklist_rtl' : 'lock' }}</mat-icon>
+            <h3>{{ emptyStateTitle() }}</h3>
+            <p class="muted">{{ emptyStateDescription() }}</p>
+            @if (canCreate() && canViewProjects()) {
+            <button mat-flat-button color="primary" (click)="requestCreateProject()">
+              <mat-icon>add</mat-icon>
+              New Project
+            </button>
+            }
+          </div>
+          } @else {
+          <table class="projects-table">
+            <thead>
+              <tr>
+                <th>
+                  <label class="checkbox">
+                    <input
+                      type="checkbox"
+                      [checked]="allSelected()"
+                      (click)="$event.stopPropagation()"
+                      (change)="toggleSelectAll($event)"
+                    />
+                    <span class="checkmark"></span>
+                  </label>
+                  Client Name
+                </th>
+                <th>Email</th>
+                <th>Project Name</th>
+                <th>Task Progress</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Start Date</th>
+                <th class="actions-col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (project of filteredProjects(); track project.id) {
+              <tr (click)="selectProject(project)" [class.active]="selectedProject()?.id === project.id">
+                <td>
+                  <div class="client-cell">
+                    <label class="checkbox" (click)="$event.stopPropagation()">
+                      <input
+                        type="checkbox"
+                        [checked]="selectedIds().has(project.id)"
+                        (change)="toggleSelection(project.id, $event)"
+                      />
+                      <span class="checkmark"></span>
+                    </label>
+                    <div class="avatar">
+                      @if (project.avatar) {
+                      <img [src]="project.avatar" [alt]="project.clientName" />
+                      } @else {
+                      <span>{{ project.clientName.charAt(0) }}</span>
+                      }
+                    </div>
+                    <div class="client-info">
+                      <div class="name">{{ project.clientName }}</div>
+                      <div class="meta muted">Client</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="muted">{{ project.clientEmail }}</td>
+                <td>
+                  <div class="project-name">
+                    <div class="title">{{ project.projectName }}</div>
+                    <div class="muted">{{ project.projectType }}</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="progress-cell">
+                    <div class="progress-bar">
+                      @for (segment of project.progressSegments; track segment.label) {
+                      <div
+                        class="progress-segment"
+                        [style.width.%]="segment.value"
+                        [style.background]="segment.color"
+                      ></div>
+                      }
+                    </div>
+                    <div class="progress-meta">
+                      {{ project.progressLabel }}
+                      <span class="percent">{{ project.progress }}%</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="status" [ngClass]="getStatusClass(project.status)">
+                    {{ statusLabel(project.status) }}
+                  </span>
+                </td>
+                <td>
+                  <span class="priority" [ngClass]="getPriorityClass(project.priority)">
+                    {{ priorityLabel(project.priority) }}
+                  </span>
+                </td>
+                <td class="muted">{{ project.startDate || 'TBD' }}</td>
+                <td>
+                  <div class="row-actions">
+                    @if (canCreate()) {
+                    <button class="icon-btn" (click)="openEditForm(project); $event.stopPropagation()">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    }
+                    @if (canDelete()) {
+                    <button class="icon-btn" (click)="deleteProject(project); $event.stopPropagation()">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          }
+        </div>
+
+        @if (!error() && !isLoading() && filteredProjects().length > 0) {
+        <div class="table-footer">
+          <div class="pagination">
+            <button mat-stroked-button class="ghost-btn">Previous</button>
+            <button mat-stroked-button class="ghost-btn">Next</button>
+          </div>
+          <span class="muted">Page 1 of 10</span>
+        </div>
+        }
+      </div>
+
+    </div>

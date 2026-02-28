@@ -1,0 +1,125 @@
+<div class="dashboard-container">
+  <!-- Welcome Header -->
+  <div class="welcome-header">
+    <h1>Welcome back, {{ authService.currentUser()?.firstName }}</h1>
+    <button mat-raised-button color="primary" (click)="goToTasksCreate()">
+      <mat-icon>add</mat-icon>
+      New Task
+    </button>
+  </div>
+
+  @if (error()) {
+  <div class="state-card error">{{ error() }}</div>
+  } @else if (isLoading()) {
+  <div class="state-card">Loading your dashboard...</div>
+  }
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    @for (stat of stats(); track stat.title) {
+    <div class="stat-card">
+      <div class="stat-header">
+        <div class="stat-info">
+          <div class="stat-title">{{ stat.title }}</div>
+          <div class="stat-value">{{ stat.value }}</div>
+        </div>
+        <div class="stat-icon" [style.background-color]="stat.color">
+          <mat-icon>{{ stat.icon }}</mat-icon>
+        </div>
+      </div>
+      <div class="stat-footer">
+        <span class="stat-change">{{ stat.helper }}</span>
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="content-grid">
+    <!-- My Tasks Table -->
+    <div class="table-container">
+      <div class="table-header">
+        <div class="table-title">
+          <mat-icon>task</mat-icon>
+          <h2>My Tasks</h2>
+        </div>
+        <div class="table-actions">
+          <button mat-icon-button>
+            <mat-icon>sort</mat-icon>
+          </button>
+          <button mat-icon-button>
+            <mat-icon>filter_list</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>Task Name</th>
+            <th>Project</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Due Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (!myTasks().length && !isLoading() && !error()) {
+          <tr>
+            <td colspan="5" class="empty-cell">No tasks to show yet.</td>
+          </tr>
+          } @else {
+          @for (task of myTasks(); track task.id) {
+          <tr>
+            <td>
+              <div class="task-name">
+                <span>{{ task.title }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="project-badge">{{ task.project }}</div>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="getStatusClass(task.status)">
+                {{ statusLabel(task.status) }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="getPriorityClass(task.priority)">
+                {{ priorityLabel(task.priority) }}
+              </span>
+            </td>
+            <td class="date-cell">{{ formatDate(task.dueDate) }}</td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="activity-card">
+      <div class="card-header">
+        <mat-icon>history</mat-icon>
+        <h3>Recent Activity</h3>
+      </div>
+      <div class="activity-list">
+        @if (!recentActivities().length && !isLoading() && !error()) {
+        <div class="muted">No recent activity yet.</div>
+        } @else {
+        @for (activity of recentActivities(); track activity.id) {
+        <div class="activity-item">
+          <div class="activity-icon" [style.background-color]="activity.color">
+            <mat-icon>{{ activity.icon }}</mat-icon>
+          </div>
+          <div class="activity-content">
+            <div class="activity-title">{{ activity.title }}</div>
+            <div class="activity-time">{{ activity.time }}</div>
+          </div>
+        </div>
+        }
+        }
+      </div>
+    </div>
+  </div>
+</div>

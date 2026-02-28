@@ -1,0 +1,9 @@
+# Simple Codex config example
+model = "gpt-5.2-codex"
+model_reasoning_effort = "high"
+
+# If you use API key auth instead of ChatGPT login:
+preferred_auth_method = "apikey"
+
+# Optional: path to CLI (usually not needed)
+# chatgpt.cliExecutable = "/usr/local/bin/codex"

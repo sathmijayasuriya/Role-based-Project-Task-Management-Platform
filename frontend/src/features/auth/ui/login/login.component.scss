@@ -1,0 +1,258 @@
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f1117 0%, #1a1d2e 100%);
+  padding: 24px;
+}
+
+.login-card {
+  background-color: var(--bg-secondary);
+  border-radius: 16px;
+  padding: 48px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-color);
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.logo-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: var(--primary-color);
+}
+
+.logo h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+h2 {
+  font-size: 24px;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: var(--error);
+  font-size: 14px;
+}
+
+.error-message mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.remember-me input[type='checkbox'] {
+  width: auto;
+  cursor: pointer;
+}
+
+.forgot-password {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+}
+
+.submit-btn {
+  width: 100%;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  line-height: 1;
+}
+
+.submit-btn mat-spinner {
+  display: inline-block;
+}
+
+.login-footer {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.login-card input,
+.login-card textarea,
+.login-card .mat-mdc-input-element,
+.login-card .mdc-text-field__input {
+  color: var(--text-primary) !important;
+  caret-color: var(--text-primary);
+}
+
+.login-card input::placeholder,
+.login-card textarea::placeholder,
+.login-card .mat-mdc-input-element::placeholder,
+.login-card .mdc-text-field__input::placeholder {
+  color: var(--text-tertiary) !important;
+}
+
+.demo-credentials {
+  padding: 16px;
+  background-color: var(--bg-tertiary);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.demo-credentials strong {
+  color: var(--text-primary);
+  display: block;
+  margin-bottom: 8px;
+}
+
+/* Align login inputs to the task form style (labels + native inputs) */
+.login-form .field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--input-label-color);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  padding: var(--input-padding-y) var(--input-padding-x);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-with-icon:hover,
+.input-with-icon:focus-within {
+  border-color: var(--input-border-hover);
+  box-shadow: var(--input-focus-shadow);
+}
+
+.input-with-icon mat-icon {
+  color: var(--text-secondary);
+}
+
+.input-with-icon input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: var(--input-font-size);
+  line-height: 1.4;
+  outline: none;
+}
+
+.input-with-icon input::placeholder {
+  color: var(--input-placeholder-color);
+}
+
+.icon-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.icon-toggle:hover {
+  color: var(--text-primary);
+}
+
+.form-options {
+  margin-top: 4px;
+  padding: 0 2px;
+  align-items: center;
+  gap: 8px;
+}
+
+::ng-deep .mat-mdc-outlined-button:not(:disabled) {
+  color: var(--text-primary);
+}
+
+.submit-btn {
+  margin-top: 6px;
+  border-radius: var(--input-radius);
+}
+
+.submit-btn span {
+  display: inline-flex;
+  align-items: center;
+}
+
+.submit-btn mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}

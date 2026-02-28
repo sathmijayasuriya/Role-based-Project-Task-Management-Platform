@@ -1,0 +1,255 @@
+<div class="team-page">
+  <nav class="breadcrumbs">
+    <mat-icon>grid_view</mat-icon>
+    <a routerLink="/dashboard">Admin Dashboard</a>
+    <span class="crumb-sep">/</span>
+    <span class="crumb-current">Team</span>
+  </nav>
+
+  <div class="page-header">
+    <div>
+      <h1>Team List</h1>
+      <p class="muted">View and manage all users—search, filter by role or status, and update details quickly.</p>
+    </div>
+  </div>
+
+  <div class="control-bar card" (click)="filtersOpen.set(false)">
+    <div class="control-left" (click)="$event.stopPropagation()">
+      <mat-icon>search</mat-icon>
+      <input
+        type="text"
+        placeholder="Search team member"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+      />
+    </div>
+    <div class="control-actions" (click)="$event.stopPropagation()">
+      <div class="control-chip">Team</div>
+      <span class="muted">{{ filteredUsers().length }} members</span>
+      <div class="divider-vertical"></div>
+      <div class="filter-toggle-wrap">
+        <button mat-stroked-button class="ghost-btn filter-toggle" (click)="toggleFilters()">
+          <mat-icon>tune</mat-icon>
+          Filters
+        </button>
+        @if (filtersOpen()) {
+        <div class="filter-dropdown">
+          <div class="dropdown-row">
+            <label>Status</label>
+            <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)">
+              <option value="all">All statuses</option>
+              <option [ngValue]="UserStatus.ACTIVE">Active</option>
+              <option [ngValue]="UserStatus.PENDING">Pending</option>
+              <option [ngValue]="UserStatus.INACTIVE">Inactive</option>
+              <option [ngValue]="UserStatus.BANNED">Banned</option>
+            </select>
+          </div>
+          <div class="dropdown-row">
+            <label>Role</label>
+            <select [ngModel]="roleFilter()" (ngModelChange)="roleFilter.set($event)">
+              <option value="all">All roles</option>
+              @for (role of roles(); track role.id) {
+              <option [ngValue]="role.name">{{ role.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="dropdown-footer">
+            <button
+              mat-button
+              class="ghost-btn"
+              type="button"
+              (click)="statusFilter.set('all'); roleFilter.set('all')"
+            >
+              Clear
+            </button>
+            <button
+              mat-flat-button
+              color="primary"
+              class="primary-btn"
+              type="button"
+              (click)="closeFilters()"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+        }
+      </div>
+      <button mat-stroked-button class="ghost-btn" (click)="loadUsers()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+      <button mat-flat-button color="primary" class="primary-btn" (click)="openCreate()">
+        <mat-icon>add</mat-icon>
+        Create
+      </button>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-wrapper">
+      @if (error()) {
+      <div class="state-card error">{{ error() }}</div>
+      } @else if (isLoading()) {
+      <div class="state-card">Loading team members...</div>
+      } @else if (!filteredUsers().length) {
+      <div class="empty-state">
+        <mat-icon>people_outline</mat-icon>
+        <h3>No team members to show</h3>
+        <p class="muted">Create a user or adjust the filters to see results.</p>
+        <button mat-flat-button color="primary" class="primary-btn" (click)="openCreate()">
+          <mat-icon>add</mat-icon>
+          Create user
+        </button>
+      </div>
+      } @else {
+      <table class="team-table">
+        <thead>
+          <tr>
+            <th>
+              <label class="checkbox">
+                <input
+                  type="checkbox"
+                  [checked]="allSelected()"
+                  (click)="$event.stopPropagation()"
+                  (change)="toggleSelectAll($event)"
+                />
+                <span class="checkmark"></span>
+              </label>
+              User
+            </th>
+            <th>Email Address</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of filteredUsers(); track user.id) {
+          <tr [class.expanded]="expandedUserId() === user.id">
+            <td>
+              <div class="user-cell">
+                <button class="icon-btn ghost" (click)="toggleExpand(user.id, $event)">
+                  <mat-icon>{{ expandedUserId() === user.id ? 'expand_less' : 'expand_more' }}</mat-icon>
+                </button>
+                <label class="checkbox" (click)="$event.stopPropagation()">
+                  <input
+                    type="checkbox"
+                    [checked]="selectedIds().has(user.id)"
+                    (change)="toggleSelection(user.id, $event)"
+                  />
+                  <span class="checkmark"></span>
+                </label>
+                <div class="avatar">
+                  @if (user.profilePictureUrl) {
+                  <img [src]="user.profilePictureUrl" [alt]="fullName(user)" />
+                  } @else {
+                  <span>{{ initials(user) }}</span>
+                  }
+                </div>
+                <div class="user-info">
+                  <div class="name">{{ fullName(user) }}</div>
+                  <div class="muted">ID: {{ user.id.slice(0, 6) }}...</div>
+                </div>
+              </div>
+            </td>
+            <td>{{ user.email }}</td>
+            <td>{{ roleLabel(user) }}</td>
+            <td>
+              <span class="status-pill" [ngClass]="statusClass(user.status)">
+                {{ statusLabel(user.status) }}
+              </span>
+            </td>
+            <td class="actions">
+              <button
+                class="icon-btn"
+                [disabled]="!canManageUsers() || isSystemAdmin(user)"
+                [title]="isSystemAdmin(user) ? 'System admin cannot be edited' : 'Edit user'"
+                (click)="openEdit(user, $event)"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                class="icon-btn danger"
+                *ngIf="canManageUsers()"
+                [disabled]="deactivatingIds().has(user.id) || isSystemAdmin(user)"
+                [title]="isSystemAdmin(user) ? 'System admin cannot be deactivated' : 'Deactivate user'"
+                (click)="deactivateUser(user, $event)"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </tr>
+          <tr class="detail-row" *ngIf="expandedUserId() === user.id">
+            <td colspan="5">
+              <div class="detail-grid">
+                <div class="detail-card">
+                  <div class="detail-label">
+                    <mat-icon>mail</mat-icon>
+                    Contact
+                  </div>
+                  <div class="detail-value">{{ user.email }}</div>
+                  <div class="muted">{{ user.phone || 'Phone not provided' }}</div>
+                </div>
+                <div class="detail-card">
+                  <div class="detail-label">
+                    <mat-icon>badge</mat-icon>
+                    Roles
+                  </div>
+                  <div class="chip-row" *ngIf="(user.roles || []).length > 0; else noRoles">
+                    @for (role of user.roles; track role.id) {
+                    <span class="chip">{{ role.name }}</span>
+                    }
+                  </div>
+                  <ng-template #noRoles>
+                    <div class="muted">No roles assigned</div>
+                  </ng-template>
+                </div>
+                <div class="detail-card">
+                  <div class="detail-label">
+                    <mat-icon>schedule</mat-icon>
+                    Activity
+                  </div>
+                  <div class="detail-value">Last login: {{ formattedDate(user.lastLoginAt) }}</div>
+                  <div class="muted">Created: {{ formattedDate(user.createdAt) }}</div>
+                </div>
+                <div class="detail-card">
+                  <div class="detail-label">
+                    <mat-icon>verified_user</mat-icon>
+                    Status
+                  </div>
+                  <div class="status-row">
+                    <span class="status-pill" [ngClass]="statusClass(user.status)">
+                      {{ statusLabel(user.status) }}
+                    </span>
+                    <span class="chip" [class.success]="user.isEmailVerified">
+                      <mat-icon>{{ user.isEmailVerified ? 'verified' : 'mark_email_unread' }}</mat-icon>
+                      {{ user.isEmailVerified ? 'Email verified' : 'Email not verified' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+      }
+    </div>
+  </div>
+
+  @if (showForm()) {
+  <div class="modal-backdrop" (click)="closeForm()">
+    <div class="modal-shell" (click)="$event.stopPropagation()">
+      <app-team-member-form
+        [mode]="formMode()"
+        [user]="editingUser()"
+        [availableRoles]="roles()"
+        [loading]="isSaving()"
+        (save)="handleSave($event)"
+        (cancel)="closeForm()"
+      />
+    </div>
+  </div>
+  }
+</div>

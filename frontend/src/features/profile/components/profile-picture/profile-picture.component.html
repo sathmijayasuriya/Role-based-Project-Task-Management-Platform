@@ -1,0 +1,97 @@
+<div class="profile-picture-section">
+  <div class="picture-content">
+    <!-- Avatar Preview -->
+    <div
+      class="picture-preview"
+      [class.hover]="isHovering()"
+      [class.pressing]="isPressing()"
+      [class.uploading]="isUploading()"
+      [class.success]="showSuccessGlow()"
+      (mouseenter)="onHover(true)"
+      (mouseleave)="onHover(false)"
+      (click)="openUploadWidget()"
+    >
+      <!-- Image -->
+        @if (hasImage()) {
+            <img
+            class="profile-image"
+            [src]="authService.currentUser()?.profilePictureUrl"
+            alt="Profile picture"
+            />
+        } @else {
+            <div class="avatar-placeholder">
+            {{ getInitials() }}
+            </div>
+        }
+
+      <!-- Hover Overlay -->
+      <div class="overlay">
+        <div class="overlay-content">
+          <mat-icon>photo_camera</mat-icon>
+          <!-- <span>Change photo</span> -->
+        </div>
+      </div>
+
+      <!-- Loading Spinner -->
+      @if (isUploading()) {
+        <div class="spinner-wrap">
+          <mat-progress-spinner
+            diameter="36"
+            mode="indeterminate"
+          ></mat-progress-spinner>
+        </div>
+      }
+
+      <!-- Delete Button -->
+      <!-- @if (hasImage() && !isUploading()) {
+        <button
+          class="delete-chip"
+          type="button"
+          (click)="removePicture(); $event.stopPropagation()"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      } -->
+
+      <!-- Remove Confirmation -->
+      @if (showRemovePrompt()) {
+        <div class="remove-prompt" (click)="$event.stopPropagation()">
+          <p>Remove profile photo?</p>
+          <div class="prompt-actions">
+            <button mat-button (click)="dismissRemovePrompt()">Cancel</button>
+            <button mat-flat-button color="warn" (click)="removePicture()">
+              Remove
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="picture-actions">
+      <button
+        mat-flat-button
+        color="primary"
+        class="upload-button"
+        (click)="openUploadWidget()"
+        [disabled]="isUploading()"
+      >
+        <mat-icon>upload</mat-icon>
+        Upload new
+      </button>
+
+      @if (hasImage()) {
+        <button
+          mat-stroked-button
+          color="warn"
+          class="remove-button"
+          (click)="removePicture()"
+          [disabled]="isUploading() || isRemoving()"
+        >
+          <mat-icon>delete</mat-icon>
+          Remove
+        </button>
+      }
+    </div>
+  </div>
+</div>

@@ -1,0 +1,518 @@
+﻿<div class="detail-page">
+  <div class="project-nav">
+    <div class="project-nav__info">
+      <nav class="breadcrumbs">
+        <mat-icon>grid_view</mat-icon>
+        <a routerLink="/dashboard">Dashboard</a>
+        <span class="crumb-sep">/</span>
+        <a routerLink="/projects">Projects</a>
+        <span class="crumb-sep">/</span>
+        <span class="crumb-current">{{ project()?.name || 'Project Overview' }}</span>
+      </nav>
+      <h1>{{ project()?.name || 'Project Overview' }}</h1>
+      <p class="muted tagline">Let's do the best today &#128075;</p>
+      <p class="muted project-meta">
+        {{ project()?.client?.name || 'Unassigned client' }} &middot;
+        {{ tasks().length || 0 }} tasks &middot;
+        Priority {{ priorityLabel(project()?.priority || 'medium') }}
+      </p>
+    </div>
+    <div class="project-nav__actions">
+      <div class="hero-avatars">
+        <div class="hero-avatars__stack" aria-label="Project members">
+          @if (visibleMembers().length) {
+            @for (member of visibleMembers(); track member.user_id) {
+              <div
+                class="hero-avatar"
+                [title]="member.user_id"
+                [style.background-image]="'url(' + memberAvatar(member.user_id) + ')'"
+              ></div>
+            }
+            @if (remainingMembersCount() > 0) {
+              <div class="hero-avatar count" [attr.title]="remainingMembersCount() + ' more members'">
+                {{ remainingMembersCount() }}+
+              </div>
+            }
+          } @else {
+            <div class="hero-avatar placeholder">NA</div>
+          }
+        </div>
+        @if (canManageMembers()) {
+          <button
+            class="hero-avatars__add"
+            type="button"
+            aria-label="Manage project members"
+            (click)="openManageMembers()"
+            [disabled]="membersLoading() || !project()"
+          >
+            <mat-icon>group</mat-icon>
+          </button>
+        }
+      </div>
+      <!-- @if (canManageMembers()) {
+        <button
+          class="primary-btn"
+          type="button"
+          (click)="openManageMembers()"
+          [disabled]="membersLoading() || !project()"
+        >
+          <mat-icon>group_add</mat-icon>
+          Project members
+        </button>
+      } -->
+    </div>
+  </div>
+
+  <nav class="tabs" aria-label="Project sections">
+    <button class="tab" type="button" [class.active]="tabIs('overview')" (click)="selectTab('overview')">
+      Overview
+    </button>
+    <button class="tab" type="button" [class.active]="tabIs('tasks')" (click)="selectTab('tasks')">
+      Tasks
+      <span class="badge">{{ tasks().length || 0 }}</span>
+    </button>
+    <button class="tab" type="button" [class.active]="tabIs('subtasks')" (click)="selectTab('subtasks')">
+      Tasks & Subtasks
+      <span class="badge">{{ totalSubtasks() }}</span>
+    </button>
+    <button class="tab" type="button" [class.active]="tabIs('team')" (click)="selectTab('team')">
+      Team Members
+      <span class="badge">{{ project()?.members?.length || 0 }}</span>
+    </button>
+    <button class="tab" type="button" [class.active]="tabIs('notifications')" (click)="selectTab('notifications')">
+      Notifications
+      <span class="badge">0</span>
+    </button>
+    <button class="tab" type="button" [class.active]="tabIs('files')" (click)="selectTab('files')">Files</button>
+    <button class="tab" type="button" [class.active]="tabIs('integrations')" (click)="selectTab('integrations')">
+      Integrations
+    </button>
+  </nav>
+
+  @if (isLoading()) {
+    <div class="state-card">Loading project...</div>
+  } @else if (error()) {
+    <div class="state-card error">{{ error() }}</div>
+  } @else if (project()) {
+    @if (tabIs('overview')) {
+      <div class="grid">
+        <div class="left">
+          <div class="card info-card">
+            <div class="info-top">
+              <div>
+                <div class="label">Project Information</div>
+                @if (isEditing()) {
+                  <input
+                    class="inline-input"
+                    type="text"
+                    placeholder="Project name"
+                    [(ngModel)]="editForm.name"
+                  />
+                } @else {
+                  <h2>{{ project()?.name || 'Project Overview' }}</h2>
+                }
+                <p class="muted small">
+                  {{ project()?.client?.name || 'Unassigned client' }} &middot; {{ tasks().length || 0 }} tasks
+                </p>
+              </div>
+              <div class="info-actions">
+                @if (isEditing()) {
+                  <button class="ghost-btn" type="button" (click)="cancelEditing()" [disabled]="isSaving()">
+                    Cancel
+                  </button>
+                  <button
+                    class="primary-btn"
+                    type="button"
+                    (click)="saveProjectEdits()"
+                    [disabled]="isSaving() || !editForm.name || !editForm.name.trim()"
+                  >
+                    <mat-icon>check</mat-icon>
+                    Save
+                  </button>
+                }
+                @if (canEditProject()) {
+                  <button
+                    class="ghost-btn icon-only"
+                    type="button"
+                    aria-label="Edit project"
+                    (click)="startEditing()"
+                    [disabled]="isSaving()"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                }
+                <button class="ghost-btn icon-only" aria-label="Share">
+                  <mat-icon>ios_share</mat-icon>
+                </button>
+                <button class="ghost-btn icon-only" aria-label="More">
+                  <mat-icon>more_horiz</mat-icon>
+                </button>
+              </div>
+            </div>
+            @if (editError()) {
+              <div class="form-error">{{ editError() }}</div>
+            }
+
+            <div class="info-summary">
+              <div class="summary-item">
+                <div class="label-sm">Status</div>
+                @if (isEditing()) {
+                  <select class="form-input" [(ngModel)]="editForm.status">
+                    @for (status of statusOptions; track status) {
+                      <option [value]="status">{{ statusLabel(status) }}</option>
+                    }
+                  </select>
+                } @else {
+                  <span class="pill status" [ngClass]="statusClass(project()?.status)">
+                    {{ statusLabel(project()?.status) }}
+                  </span>
+                }
+              </div>
+
+              <div class="summary-item">
+                <div class="label-sm">Due date</div>
+                @if (isEditing()) {
+                  <input class="form-input" type="date" [(ngModel)]="editForm.end_date" />
+                } @else {
+                  <div class="summary-value">
+                    <mat-icon>calendar_today</mat-icon>
+                    {{ formatDate(project()?.end_date) || 'TBD' }}
+                  </div>
+                }
+              </div>
+
+              <div class="summary-item">
+                <div class="label-sm">Priority</div>
+                @if (isEditing()) {
+                  <select class="form-input" [(ngModel)]="editForm.priority">
+                    @for (priority of priorityOptions; track priority) {
+                      <option [value]="priority">{{ priorityLabel(priority) }}</option>
+                    }
+                  </select>
+                } @else {
+                  <span class="pill priority" [ngClass]="priorityClass(project()?.priority || 'medium')">
+                    {{ priorityLabel(project()?.priority || 'medium') }}
+                  </span>
+                }
+              </div>
+            </div>
+
+            <div class="info-details">
+
+              <!-- tags and priority -->
+              <div class="detail-item">
+                <div class="detail-icon">
+                  <mat-icon>sell</mat-icon>
+                </div>
+                <div class="detail-content">
+                  <div class="label-sm">Tags & priority</div>
+                  <div class="chips">
+                    <span class="chip">Dashboard</span>
+                    <span class="chip danger">High Priority</span>
+                    <span class="chip">Priority: {{ priorityLabel(project()?.priority || 'medium') }}</span>
+                    @if (project()?.client?.name) {
+                      <span class="chip">{{ project()?.client?.name }}</span>
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <!-- description -->
+              <div class="detail-item description">
+                <div class="detail-icon">
+                  <mat-icon>description</mat-icon>
+                </div>
+                <div class="detail-content">
+                  <div class="label-sm">Description</div>
+                  @if (isEditing()) {
+                    <textarea
+                      class="form-input"
+                      rows="3"
+                      placeholder="Describe the project"
+                      [(ngModel)]="editForm.description"
+                    ></textarea>
+                  } @else {
+                    <p class="muted">
+                      {{ project()?.description || 'The project focuses on redesigning the experience and streamlining customer and transaction management.' }}
+                    </p>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- attachements and goals -->
+            <div class="info-extra-grid">
+              <div class="extra-card">
+                <div class="extra-header">
+                  <mat-icon>attach_file</mat-icon>
+                  <span>Attachments ({{ attachments().length }})</span>
+                </div>
+                <div class="attachment-list">
+                  @for (item of attachments(); track item.title) {
+                    <div class="attachment-row">
+                      <div class="attachment-left">
+                        <div class="attachment-icon" [ngClass]="item.variant">{{ item.icon }}</div>
+                        <div>
+                          <div class="value">{{ item.title }}</div>
+                          <div class="muted small">{{ item.time }}</div>
+                        </div>
+                      </div>
+                      <div class="attachment-actions">
+                        <button class="link-btn">
+                          <mat-icon>visibility</mat-icon>
+                          View
+                        </button>
+                        <button class="link-btn">
+                          <mat-icon>download</mat-icon>
+                          Download
+                        </button>
+                      </div>
+                    </div>
+                  } @empty {
+                    <div class="muted small">No attachments yet.</div>
+                  }
+                </div>
+              </div>
+
+              <div class="extra-card">
+                <div class="extra-header">
+                  <mat-icon>flag</mat-icon>
+                  <span>Project Goals</span>
+                </div>
+                <div class="goals">
+                  @for (goal of goals(); track goal.id) {
+                    <div class="goal-row">
+                      <span class="goal-number">{{ goal.id }}</span>
+                      <p class="muted">{{ goal.text }}</p>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card member-card">
+            <div class="member-header">
+              <div>
+                <div class="label">Project Members</div>
+                <h3>{{ project()?.members?.length || 0 }} members</h3>
+              </div>
+              <div class="member-header__actions">
+                @if (membersLoading()) {
+                  <span class="muted small">Loading...</span>
+                }
+                @if (canManageMembers()) {
+                  <button class="primary-btn" type="button" (click)="openManageMembers()" [disabled]="membersLoading()">
+                    <mat-icon>group</mat-icon>
+                    Manage members
+                  </button>
+                }
+              </div>
+            </div>
+            <div class="member-avatars">
+              <div class="avatar-stack">
+                @if (visibleMembers().length) {
+                  @for (member of visibleMembers(); track member.user_id) {
+                    <div
+                      class="avatar-photo"
+                      [title]="member.user_id"
+                      [style.background-image]="'url(' + memberAvatar(member.user_id) + ')'"
+                    ></div>
+                  }
+                  @if (remainingMembersCount() > 0) {
+                    <div class="avatar-count" [attr.title]="remainingMembersCount() + ' more members'">
+                      {{ remainingMembersCount() }}+
+                    </div>
+                  }
+                } @else {
+                  <span class="muted small">No members yet</span>
+                }
+              </div>
+            </div>
+            <div class="member-list full">
+              @if (memberError()) {
+                <div class="form-error">{{ memberError() }}</div>
+              } @else if (membersLoading()) {
+                <div class="state-card">Loading members...</div>
+              } @else if (project()?.members?.length) {
+                @for (member of project()?.members || []; track member.user_id) {
+                  <div class="member-row">
+                    <div class="member-row__info">
+                      <div
+                        class="member-photo"
+                        [style.background-image]="'url(' + memberAvatar(member.user_id) + ')'"
+                        [attr.title]="memberDisplayName(member)"
+                      ></div>
+                      <div>
+                        <div class="value">{{ memberDisplayName(member) }}</div>
+                        <div class="muted small">
+                          {{ memberEmail(member) || shortUser(member.user_id) }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="member-row__meta">
+                      <span class="pill subtle">{{ memberRole(member) }}</span>
+                      <span class="pill subtle">{{ memberStatus(member) }}</span>
+                    </div>
+                  </div>
+                }
+              } @else {
+                <span class="muted small">No members yet</span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="right">
+          <div class="card chart-card">
+            <div class="card-header">
+              <h3>Status Breakdown</h3>
+              <span class="muted small">{{ totalTasks() }} items</span>
+            </div>
+            <div class="chart-row">
+              <div class="donut-wrap">
+                <svg viewBox="0 0 140 140" class="donut">
+                  <circle class="donut-base" cx="70" cy="70" r="52" />
+                  @for (seg of chartSegments(); track seg.label) {
+                    <circle
+                      class="donut-seg"
+                      cx="70"
+                      cy="70"
+                      r="52"
+                      [attr.stroke]="seg.color"
+                      [attr.stroke-dasharray]="seg.dasharray"
+                      [attr.stroke-dashoffset]="seg.offset"
+                    />
+                  }
+                </svg>
+                <div class="donut-center">
+                  <div class="value">{{ totalTasks() }}</div>
+                  <div class="muted small">Tasks</div>
+                </div>
+              </div>
+              <div class="legend">
+                @for (seg of chartSegments(); track seg.label) {
+                  <div class="legend-item">
+                    <span class="dot" [style.background]="seg.color"></span>
+                    <div class="legend-text">
+                      <div class="label">{{ seg.label }}</div>
+                      <div class="muted small">{{ seg.percent }}%</div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="card activity-card">
+            <div class="card-header">
+              <h3>Recent Activity</h3>
+            </div>
+            @if (activityItems().length) {
+              <div class="activity-list">
+                @for (item of activityItems(); track item.title) {
+                  <div class="activity-row">
+                    <div class="avatar tiny">{{ item.initial }}</div>
+                    <div>
+                      <div class="value">{{ item.title }}</div>
+                      <div class="muted small">{{ item.description }}</div>
+                    </div>
+                    <div class="muted small">{{ item.time }}</div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="muted">No recent activity yet.</div>
+            }
+          </div>
+        </div>
+      </div>
+    } @else if (tabIs('tasks')) {
+      <div class="card table-card">
+        <div class="card-header">
+          <div class="title-stack">
+            <h3>Tasks</h3>
+            <span class="muted small">{{ tasks().length || 0 }} total</span>
+          </div>
+          <div class="table-actions">
+            <button class="ghost-btn" type="button" (click)="openTasksWorkspace()">
+              <mat-icon>open_in_new</mat-icon>
+              Tasks workspace
+            </button>
+            @if (canCreateTask()) {
+              <button
+                class="primary-btn"
+                type="button"
+                (click)="openCreateTaskDialog()"
+                [disabled]="tasksLoading()"
+              >
+                <mat-icon>add</mat-icon>
+                New Task
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (tasksError()) {
+          <div class="state-card error">{{ tasksError() }}</div>
+        } @else if (tasksLoading()) {
+          <div class="state-card">Loading tasks...</div>
+        } @else if (tasks().length) {
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Subtasks</th>
+                  <th>Status</th>
+                  <th>Priority</th>
+                  <th>Progress</th>
+                  <th>Due</th>
+                  <th>Assignee</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (task of tasks(); track task.id) {
+                  <tr>
+                    <td>
+                      <div class="task-name">{{ task.title || 'Untitled task' }}</div>
+                      <div class="muted small">{{ task.description || 'No description' }}</div>
+                    </td>
+                    <td>
+                      <div class="muted small">{{ task.subtasks?.length || 0 }}</div>
+                    </td>
+                    <td>
+                      <span class="pill status" [ngClass]="statusClass(task.status)">
+                        {{ statusLabel(task.status) }}
+                      </span>
+                  </td>
+                  <td>
+                    <span class="pill priority" [ngClass]="priorityClass(task.priority)">
+                      {{ priorityLabel(task.priority || 'medium') }}
+                    </span>
+                  </td>
+                  <td>{{ task.progress_percent ?? 0 }}%</td>
+                  <td>{{ formatDate(task.due_date) || 'TBD' }}</td>
+                  <td class="muted small">{{ assigneeName(task.assigned_to) }}</td>
+                  <td class="actions-cell">
+                    <mat-icon
+                      [class.completed]="isCompleted(task.status)"
+                      [attr.title]="isCompleted(task.status) ? 'Completed' : 'Pending'"
+                    >
+                      {{ isCompleted(task.status) ? 'task_alt' : 'radio_button_unchecked' }}
+                    </mat-icon>
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="muted">No tasks yet.</div>
+        }
+      </div>
+    } @else {
+      <div class="state-card">This section is coming soon.</div>
+    }
+  }
+</div>

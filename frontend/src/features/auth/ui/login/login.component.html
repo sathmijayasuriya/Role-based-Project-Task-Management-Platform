@@ -1,0 +1,88 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="logo">
+        <mat-icon class="logo-icon">assignment</mat-icon>
+        <h1>Planquo</h1>
+      </div>
+      <h2>Welcome Back! 👋</h2>
+      <p class="subtitle">Sign in to continue to your dashboard</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="login-form">
+      @if (errorMessage()) {
+      <div class="error-message">
+        <mat-icon>error</mat-icon>
+        {{ errorMessage() }}
+      </div>
+      }
+
+      <label class="field-label full-width">
+        <span>Email Address</span>
+        <div class="input-with-icon">
+          <mat-icon>email</mat-icon>
+          <input
+            type="email"
+            [(ngModel)]="credentials.email"
+            name="email"
+            required
+            placeholder="Admin@example.com"
+          />
+        </div>
+      </label>
+
+      <label class="field-label full-width">
+        <span>Password</span>
+        <div class="input-with-icon">
+          <mat-icon>lock</mat-icon>
+          <input
+            [type]="hidePassword() ? 'password' : 'text'"
+            [(ngModel)]="credentials.password"
+            name="password"
+            required
+            placeholder="Enter your password"
+          />
+          <button type="button" class="icon-toggle" (click)="hidePassword.set(!hidePassword())" aria-label="Toggle password visibility">
+            <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </div>
+      </label>
+
+      <div class="form-options">
+        <label class="remember-me">
+          <input type="checkbox" [(ngModel)]="rememberMe" name="remember" />
+          <span>Remember me</span>
+        </label>
+        <a href="#" class="forgot-password">Forgot Password?</a>
+      </div>
+
+      <button
+        mat-raised-button
+        color="primary"
+        type="submit"
+        class="submit-btn"
+        [disabled]="authService.isLoading()"
+      >
+        @if (authService.isLoading()) {
+        <ng-container>
+          <mat-spinner diameter="20"></mat-spinner>
+          <span>Signing in...</span>
+        </ng-container>
+        } @else {
+        <ng-container>
+          <span>Sign In</span>
+          <mat-icon>arrow_forward</mat-icon>
+        </ng-container>
+        }
+      </button>
+    </form>
+
+    <!-- <div class="login-footer">
+      <p class="demo-credentials">
+        <strong>Demo Credentials:</strong><br />
+        Admin: admin@example.com / Admin@123<br />
+        User: user@example.com / User@@##123
+      </p>
+    </div> -->
+  </div>
+</div>
